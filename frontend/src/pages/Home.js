@@ -1,79 +1,31 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import "./Home.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Link } from "react-router-dom";
 import axios from "axios";
-const LIMIT = 10;
-
-const totalPagesCalculator = (total, limit) => {
-  const pages = [];
-  for (let x = 1; x <= parseInt(total) / limit; x++) {
-    pages.push(x);
-  }
-
-  return pages;
-};
 
 const Home = () => {
   const [data, setData] = useState([]);
-  const [activePage, setActivePage] = useState(1);
-  const [totalUsers, setTotalUsers] = useState(0);
-
-  useMemo(() => {
-    //loadData();
-    axios
-      .get("http://localhost:5000/api/get", {
-        params: {
-          page: 1,
-          size: LIMIT,
-        },
-      })
-      .then(({ data }) => {
-        setData(data.records);
-      })
-      .catch((err) => {
-        console.log(err.response);
-      });
-  }, [activePage]);
+  const loadData = async () => {
+    const response = await axios.get("http://localhost:5000/api/get");
+    setData(response.data);
+  };
+  useEffect(() => {
+    loadData();
+  });
+  const deleteContact=(id)=>{
+    if(window.confirm("Are you sure that u want to delete?")){
+      axios.delete(`http://localhost:5000/api/remove/${id}`);
+      toast.success("Contact Deleted Successfully");
+      setTimeout(()=>loadData(),500);
+    }
+  }
   return (
     <div style={{ marginTop: "150px" }}>
-      <ul className="pagination">
-        {activePage !== 1 && (
-          <li
-            className="page-item"
-            onClick={() => setActivePage(activePage - 1)}
-          >
-            <a className="page-link" href="javascript:void(null)">
-              Previous
-            </a>
-          </li>
-        )}
-        {totalPagesCalculator(totalUsers, LIMIT).map((page) => (
-          <li
-            className={`page-item ${activePage === page ? "active" : ""}`}
-            key={page}
-          >
-            <a
-              className="page-link"
-              href="javascript:void(null)"
-              onClick={() => setActivePage(page)}
-            >
-              {page}
-            </a>
-          </li>
-        ))}
-        {activePage !== totalPagesCalculator(totalUsers, LIMIT).length && (
-          <li
-            className="page-item"
-            onClick={() => setActivePage(activePage + 1)}
-          >
-            <a className="page-link" href="javascript:void(null)">
-              Next
-            </a>
-          </li>
-        )}
-      </ul>
+      <Link to='/addemployee'>
+        <button className="btn btn-employee">Add Employee</button>
+      </Link>
       <table className="styled-table">
         <thead>
           <tr>
@@ -83,7 +35,7 @@ const Home = () => {
             <th style={{ textAlign: "center" }}>Phone Number</th>
             <th style={{ textAlign: "center" }}>Email</th>
             <th style={{ textAlign: "center" }}>Address</th>
-            <th style={{ textAlign: "center" }}>Actions</th>
+            <th style={{ textAlign: "center" }}>Action</th>
           </tr>
         </thead>
         <tbody>
@@ -100,7 +52,7 @@ const Home = () => {
                   <Link to={`/update/${item.id}`}>
                     <button className="btn btn-edit">Edit</button>
                   </Link>
-                  <button className="btn btn-delete">Delete</button>
+                  <button className="btn btn-delete" onClick={()=>deleteContact(item.id)}>Delete</button>
                   <Link to={`/view/${item.id}`}>
                     <button className="btn btn-view">View</button>
                   </Link>

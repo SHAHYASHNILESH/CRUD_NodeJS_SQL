@@ -17,19 +17,47 @@ app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get("/api/get", (req, res) => {
-  const page = req.query.page? parseInt(req.query.page):1;
-  const size = req.query.size? parseInt(req.query.size):10;
-  const offset= (page - 1) * size;
-  const sqlGet = "SELECT * FROM employeedb SIZE ? OFFSET ?";
-  const values = [size,offset];
-  db.query(sqlGet, values, (err, result) => {
-    const paginator = new pagination.SearchPaginator({
-      prelink: "/api/get",
-      current: page,
-      rowsPerPage:size,
-      totalResult: result.length,
-    });
-    res.status(200).json({ employees: result, pagination: paginator.render() });
+  const sqlGet = "SELECT * FROM employeedb";
+  db.query(sqlGet, (err, result) => {
+    res.send(result);
+  });
+});
+
+app.post("/api/post", (req, res) => {
+  const { name, title, phone, email, address } = req.body;
+  const sqlInsert =
+    "INSERT INTO employeedb(name,title,phone,email,address) VALUES(?,?,?,?,?)";
+  db.query(sqlInsert, [name, title, phone, email, address], (err, result) => {
+    if (err) {
+      console.log(err);
+    }
+  });
+});
+
+app.delete("/api/remove/:id", (req, res) => {
+  const { id } = req.params;
+  const sqlRemove = "DELETE FROM employeedb WHERE id=?";
+  db.query(sqlRemove, id, (err, result) => {
+    if (err) {
+      console.log(err);
+    }
+  });
+});
+
+app.get("/api/get/:id", (req, res) => {
+  const { id } = req.params;
+  const sqlGet = "SELECT * FROM employeedb WHERE id=?";
+  db.query(sqlGet, id, (err, result) => {
+    res.send(result);
+  });
+});
+
+app.put("/api/update/:id", (req, res) => {
+  const { id } = req.params;
+  const { name, title, phone, email, address } = req.body;
+  const sqlUpdate =
+    "UPDATE employeedb SET name=?,title=?,phone=?,email=?,address=? WHERE id=?";
+  db.query(sqlUpdate, [name, title, phone, email, address, id], (err, result) => {
     res.send(result);
   });
 });
